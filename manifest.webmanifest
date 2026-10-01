@@ -1,0 +1,16 @@
+{
+  "name": "Adagio Delta — Terrain",
+  "short_name": "Delta Terrain",
+  "description": "Signaler un problème technique, prendre une photo et relever les débits d'eau depuis le téléphone.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF7F2",
+  "theme_color": "#F07300",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

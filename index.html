@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F07300">
+<title>Adagio Delta — Terrain</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --orange:#F07300; --orange-fonce:#C45D00; --creme:#FAF7F2; --encre:#2B2B2B;
+  --gris-t:#6B6B6B; --trait:#DDD6CC; --blanc:#fff;
+  --et-gris:#D9D4CC; --et-orange:#F0A030; --et-rouge:#D64541;
+  --ok:#2E7D4F; --rouge:#C0392B;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:var(--creme); color:var(--encre); font-size:16px; line-height:1.45;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+header{
+  background:var(--orange); color:#fff; padding:calc(.7rem + env(safe-area-inset-top)) 1rem .7rem;
+  position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:.6rem;
+}
+header h1{font-size:1.05rem;margin:0;font-weight:700;flex:1}
+header button{background:rgba(255,255,255,.2);border:0;color:#fff;font-size:1.2rem;
+  width:38px;height:38px;border-radius:9px}
+main{padding:1rem;max-width:620px;margin:0 auto}
+.carte{background:#fff;border:1px solid var(--trait);border-radius:12px;padding:1rem;margin-bottom:1rem}
+h2{font-size:1.05rem;margin:0 0 .7rem}
+label{display:block;font-weight:600;font-size:.88rem;margin:.9rem 0 .3rem}
+input,select,textarea{
+  width:100%;padding:.75rem;border:1px solid var(--trait);border-radius:9px;
+  font-size:16px;font-family:inherit;background:#fff;color:var(--encre)
+}
+textarea{min-height:92px;resize:vertical}
+button.b{
+  width:100%;padding:.95rem;border:0;border-radius:10px;background:var(--orange);
+  color:#fff;font-size:1rem;font-weight:700;margin-top:1rem
+}
+button.b:disabled{background:#bbb}
+button.b.sec{background:#fff;color:var(--encre);border:1px solid var(--trait)}
+button.b.danger{background:var(--rouge)}
+.muted{color:var(--gris-t);font-size:.85rem}
+.ligne{display:flex;gap:.6rem}
+.ligne>*{flex:1}
+/* ---- schéma du studio ---- */
+.stage{position:relative;width:100%;aspect-ratio:3/3.4;background:#fff;
+  border:2px solid var(--trait);border-radius:12px;overflow:hidden;margin-top:.5rem}
+.el{position:absolute;border:1px solid rgba(0,0,0,.18);border-radius:7px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:.62rem;text-align:center;padding:2px;line-height:1.12;color:#1d1d1d;
+  text-decoration:none;overflow:hidden;font-weight:600;
+  /* un mot long (« Radiateur ») dans une case étroite doit se couper, pas déborder */
+  overflow-wrap:anywhere;word-break:break-word;hyphens:auto}
+.el .ic{font-size:1rem}
+.el .bg{position:absolute;top:1px;right:3px;font-weight:700;font-size:.7rem}
+.legende{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.78rem;margin-top:.6rem}
+.sw{display:inline-block;width:13px;height:13px;border-radius:3px;
+  border:1px solid rgba(0,0,0,.2);vertical-align:-2px;margin-right:4px}
+/* ---- divers ---- */
+.pill{display:inline-block;padding:.15rem .5rem;border-radius:99px;font-size:.75rem;
+  background:#EFEAE2;margin-right:.3rem}
+.pill.r{background:#F8D7D5;color:#8E2A20}
+.pill.o{background:#FCE6C8;color:#8A5200}
+.pill.v{background:#D9EDE2;color:#1E5C3C}
+.item{border-bottom:1px solid var(--trait);padding:.7rem 0}
+.item:last-child{border-bottom:0}
+.vignettes{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.6rem}
+.vignettes figure{margin:0;position:relative}
+.vignettes img{width:76px;height:76px;object-fit:cover;border-radius:8px;border:1px solid var(--trait)}
+.vignettes button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;
+  border:0;background:var(--rouge);color:#fff;font-size:.8rem;line-height:1}
+.banniere{padding:.7rem .9rem;border-radius:10px;margin-bottom:1rem;font-size:.88rem}
+.banniere.info{background:#E3EEF6;border:1px solid #B8D4E8}
+.banniere.warn{background:#FCF0D8;border:1px solid #E8CE94}
+.banniere.err{background:#F8D7D5;border:1px solid #E8A9A3}
+.banniere.ok{background:#D9EDE2;border:1px solid #A8D4BC}
+nav.onglets{display:flex;background:#fff;border-top:1px solid var(--trait);
+  position:sticky;bottom:0;z-index:40}
+nav.onglets button{flex:1;background:none;border:0;padding:.6rem .2rem calc(.6rem + env(safe-area-inset-bottom));
+  font-size:.68rem;color:var(--gris-t);font-family:inherit}
+nav.onglets button .ic{display:block;font-size:1.25rem;line-height:1.3}
+nav.onglets button[aria-current="page"]{color:var(--orange);font-weight:700}
+.cache{display:none !important}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="titre">Adagio Delta — Terrain</h1>
+  <button id="btnReglages" title="Réglages" aria-label="Réglages">⚙</button>
+</header>
+
+<main id="vue"></main>
+
+<nav class="onglets" id="nav"></nav>
+
+<script>
+/* =====================================================================
+   ADAGIO DELTA — TERRAIN
+   App mobile de signalement, reliée à l'app « Gestion technique ».
+   Les 18 éléments et leurs positions reprennent src/components/StudioPerspective.tsx
+   et src/domain/studioEquipment.ts de l'app, pour que l'ergonomie soit identique.
+   ===================================================================== */
+
+/* ---- À RENSEIGNER PAR STEVEN AVANT PUBLICATION (voir INSTALLATION.md) ---- */
+const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbx-zO1wdyYxF8PaK12YWBJqi24m7hQ55gLg9WBiEO1s12SkaYq9qtYdSrvaSe_gLekc/exec";
+
+/* ---------------------------------------------------------------- données */
+
+/* l = libellé complet (formulaire, listes) ; s = libellé court (cases du schéma, souvent
+   très étroites sur un téléphone : un libellé long y serait coupé). */
+const ELEMENTS = [
+  {id:'lit',           g:'Mobilier',              l:'Literie & lit',              s:'Literie',      t:'Mobilier / Électroménager', ic:'🛏️', p:{x:4,y:48,w:34,h:34}},
+  {id:'canape_table',  g:'Mobilier',              l:'Canapé, table & assises',    s:'Canapé',       t:'Mobilier / Électroménager', ic:'🛋️', p:{x:41,y:57,w:21,h:25}},
+  {id:'armoire',       g:'Mobilier',              l:'Armoire, penderie & bureau', s:'Armoire',      t:'Menuiserie',                ic:'🗄️', p:{x:4,y:18,w:19,h:26}},
+  {id:'vaisselle',     g:'Cuisine & vaisselle',   l:'Vaisselle & couverts',       s:'Vaisselle',    t:'Mobilier / Électroménager', ic:'🍽️', p:{x:64,y:45,w:28,h:9}},
+  {id:'frigo',         g:'Électroménager',        l:'Réfrigérateur',              s:'Frigo',        t:'Mobilier / Électroménager', ic:'❄️', p:{x:64,y:4,w:13,h:17}},
+  {id:'plaque',        g:'Électroménager',        l:'Plaque de cuisson',          s:'Plaque',       t:'Mobilier / Électroménager', ic:'🔥', p:{x:79,y:4,w:13,h:17}},
+  {id:'microonde',     g:'Électroménager',        l:'Micro-ondes',                s:'Micro-ondes',  t:'Mobilier / Électroménager', ic:'⏲️', p:{x:64,y:23,w:13,h:9}},
+  {id:'hotte',         g:'Électroménager',        l:'Hotte',                      s:'Hotte',        t:'Mobilier / Électroménager', ic:'🌀', p:{x:79,y:23,w:13,h:7}},
+  {id:'seche_fer',     g:'Électroménager',        l:'Sèche-cheveux & fer',        s:'Sèche-ch.',    t:'Mobilier / Électroménager', ic:'💨', p:{x:78,y:59,w:13,h:13,z:2}},
+  {id:'tv_chromecast', g:'Multimédia & réseau',   l:'TV + Chromecast',            s:'TV',           t:'Réseau / informatique',     ic:'📺', p:{x:4,y:4,w:22,h:11}},
+  {id:'wifi',          g:'Multimédia & réseau',   l:'Wifi / Internet',            s:'Wifi',         t:'Réseau / informatique',     ic:'📶', p:{x:29,y:4,w:11,h:9}},
+  {id:'sdb',           g:'Plomberie & sanitaire', l:'Salle de bain',              s:'Salle de bain',t:'Plomberie',                 ic:'🚿', p:{x:65,y:57,w:27,h:31}},
+  {id:'evier',         g:'Plomberie & sanitaire', l:'Évier & robinetterie',       s:'Évier',        t:'Plomberie',                 ic:'🚰', p:{x:64,y:34,w:28,h:9}},
+  {id:'peinture',      g:'Peinture',              l:'Peinture & murs',            s:'Peinture',     t:'Mur/Peinture',              ic:'🎨', p:{x:41,y:85,w:20,h:9}},
+  {id:'boitier',       g:'Électricité',           l:'Boîtier électrique',         s:'Boîtier',      t:'Électricité',               ic:'⚡', p:{x:25,y:30,w:14,h:11}},
+  {id:'radiateur_sdb', g:'Électricité',           l:'Radiateur SDB',              s:'Rad.',         t:'Électricité',               ic:'♨️', p:{x:66,y:59,w:11,h:13,z:2}},
+  {id:'eclairage',     g:'Électricité',           l:'Éclairage / lumières',       s:'Éclairage',    t:'Électricité',               ic:'💡', p:{x:44,y:16,w:16,h:12}},
+  {id:'coffre',        g:'Sécurité',              l:'Coffre-fort',                s:'Coffre',       t:'Serrurerie',                ic:'🔒', p:{x:25,y:18,w:9,h:9}},
+];
+const PAR_ID = Object.fromEntries(ELEMENTS.map(e=>[e.id,e]));
+const TYPES = ['Mur/Peinture','Plomberie','Électricité','HVAC','Mobilier / Électroménager',
+               'Serrurerie','Menuiserie','Sécurité incendie','Réseau / informatique','Autre'];
+const PRIORITES = ['Basse','Moyenne','Haute','Urgente'];
+const ROLES = ['Réception','Housekeeping','Maintenance','GM/Admin'];
+const BOITIER_PMR = "Studio PMR : le boîtier électrique ne se trouve PAS dans la chambre, "
+  + "mais dans le local housekeeping en fin de couloir.";
+const CIBLES = {cuisine:6, sdb:5, douche:9};
+
+/* ---------------------------------------------------------------- état */
+
+const S = {
+  cle: localStorage.getItem('terrain.cle') || '',
+  qui: JSON.parse(localStorage.getItem('terrain.qui') || 'null'),
+  device: localStorage.getItem('terrain.device') || '',
+  snap: JSON.parse(localStorage.getItem('terrain.snap') || 'null'),
+  onglet: 'chambre',
+  zone: null,
+  photos: [],
+  file: JSON.parse(localStorage.getItem('terrain.file') || '[]'),
+  enLigne: navigator.onLine,
+};
+if (!S.device) { S.device = 'D-' + Math.random().toString(36).slice(2,10); localStorage.setItem('terrain.device', S.device); }
+
+(function cleDepuisUrl(){
+  const m = (location.search + location.hash).match(/[?&#]k=([A-Za-z0-9_-]+)/);
+  if (m) { S.cle = m[1]; localStorage.setItem('terrain.cle', S.cle);
+           history.replaceState(null,'',location.pathname); }
+})();
+
+const sauve = (k,v)=>localStorage.setItem('terrain.'+k, JSON.stringify(v));
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------------------------------------------------------------- réseau */
+
+async function appelGet(action, extra){
+  if (!URL_SCRIPT) throw new Error("L'adresse du script n'est pas renseignée dans l'app.");
+  const u = new URL(URL_SCRIPT);
+  u.searchParams.set('action', action);
+  u.searchParams.set('jeton', S.cle);
+  Object.entries(extra||{}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const r = await fetch(u, {redirect:'follow'});
+  return r.json();
+}
+
+async function appelPost(corps){
+  if (!URL_SCRIPT) throw new Error("L'adresse du script n'est pas renseignée dans l'app.");
+  const r = await fetch(URL_SCRIPT, {
+    method:'POST', redirect:'follow',
+    headers:{'Content-Type':'text/plain;charset=utf-8'}, // évite le préflight CORS
+    body: JSON.stringify(Object.assign({jeton:S.cle}, corps)),
+  });
+  return r.json();
+}
+
+/** Envoi avec file d'attente : en tournée les couloirs captent mal. */
+async function envoyer(corps){
+  try {
+    const rep = await appelPost(corps);
+    if (!rep || rep.ok === false) throw new Error((rep && rep.erreur) || 'Refus du serveur.');
+    return {ok:true, rep};
+  } catch (e) {
+    S.file.push({corps, le:new Date().toISOString()});
+    sauve('file', S.file);
+    return {ok:false, enAttente:true, message:e.message};
+  }
+}
+
+async function viderFile(){
+  if (!S.file.length || !S.enLigne) return;
+  const reste = [];
+  for (const t of S.file) {
+    try {
+      const rep = await appelPost(t.corps);
+      if (!rep || rep.ok === false) reste.push(t);
+    } catch { reste.push(t); }
+  }
+  S.file = reste; sauve('file', S.file);
+  rendre();
+}
+window.addEventListener('online', ()=>{S.enLigne=true; viderFile();});
+window.addEventListener('offline', ()=>{S.enLigne=false; rendre();});
+
+/* ---------------------------------------------------------------- photos */
+
+/** Compression avant envoi : une photo de téléphone fait 3-5 Mo, inexploitable tel quel. */
+function compresser(file, maxPx=1280, q=0.75){
+  return new Promise((res,rej)=>{
+    const fr = new FileReader();
+    fr.onerror = ()=>rej(new Error('Lecture de la photo impossible.'));
+    fr.onload = ()=>{
+      const img = new Image();
+      img.onerror = ()=>rej(new Error('Photo illisible.'));
+      img.onload = ()=>{
+        let {width:w, height:h} = img;
+        const f = Math.min(1, maxPx/Math.max(w,h));
+        w = Math.round(w*f); h = Math.round(h*f);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg', q));
+      };
+      img.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ---------------------------------------------------------------- état des éléments */
+
+function issuesDe(zoneId){
+  if (!S.snap || !S.snap.issues) return [];
+  return S.snap.issues.filter(i=>i.zone_id===zoneId);
+}
+function partagent(type){ return ELEMENTS.filter(e=>e.t===type).length; }
+
+/** Reprend la règle de l'app : jamais de couleur devinée (roomStatus.ts). */
+function etatElement(zoneId, el){
+  const ouverts = issuesDe(zoneId);
+  const exact = ouverts.filter(i=>i.dotation_item===el.id);
+  if (exact.length) return {c: exact.some(i=>i.priority==='Urgente')?'rouge':'orange', n:exact.length, issues:exact};
+  const memeType = ouverts.filter(i=>!i.dotation_item && i.problem_type===el.t);
+  if (memeType.length && partagent(el.t)===1)
+    return {c: memeType.some(i=>i.priority==='Urgente')?'rouge':'orange', n:memeType.length, issues:memeType};
+  return {c:'gris', n:0, issues:[]};
+}
+const COUL = {gris:'var(--et-gris)', orange:'var(--et-orange)', rouge:'var(--et-rouge)'};
+
+/* ---------------------------------------------------------------- rendu */
+
+const vue = document.getElementById('vue');
+const ONGLETS = [
+  {id:'chambre', ic:'🚪', l:'Chambre'},
+  {id:'signaler', ic:'➕', l:'Signaler'},
+  {id:'debits',  ic:'💧', l:'Débits'},
+  {id:'mes',     ic:'📋', l:'Mes envois'},
+];
+
+function rendreNav(){
+  document.getElementById('nav').innerHTML = ONGLETS.map(o=>
+    `<button data-o="${o.id}" ${S.onglet===o.id?'aria-current="page"':''}>
+       <span class="ic">${o.ic}</span>${o.l}</button>`).join('');
+}
+
+function bandeaux(){
+  let h = '';
+  if (!S.cle) h += `<div class="banniere err"><b>App non configurée.</b> Ouvrez le lien
+      complet fourni par Steven (il contient votre clé d'accès), ou saisissez-la via ⚙.</div>`;
+  if (!S.enLigne) h += `<div class="banniere warn">📴 Hors ligne. Vous pouvez continuer :
+      vos envois partiront automatiquement dès le retour du réseau.</div>`;
+  if (S.file.length) h += `<div class="banniere info">⏳ ${S.file.length} envoi(s) en attente de réseau.
+      <button class="b sec" style="margin-top:.5rem" onclick="viderFile()">Réessayer maintenant</button></div>`;
+  if (S.snap && S.snap.publie_le) {
+    const j = Math.floor((Date.now()-new Date(S.snap.publie_le))/86400000);
+    if (j >= 3) h += `<div class="banniere warn">⚠️ L'état des chambres affiché date de ${j} jours
+        (publié le ${new Date(S.snap.publie_le).toLocaleDateString('fr-BE')}). Demandez à Steven de republier.</div>`;
+  }
+  return h;
+}
+
+function rendre(){
+  rendreNav();
+  if (!S.qui) return vueIdentite();
+  ({chambre:vueChambre, signaler:vueSignaler, debits:vueDebits, mes:vueMes}[S.onglet] || vueChambre)();
+}
+
+/* ---- identification ---- */
+function vueIdentite(){
+  document.getElementById('titre').textContent = 'Bienvenue';
+  vue.innerHTML = `${bandeaux()}
+    <div class="carte">
+      <h2>Qui êtes-vous ?</h2>
+      <p class="muted">Votre nom apparaît sur les signalements pour que la maintenance
+         sache qui contacter. Ce n'est pas un mot de passe.</p>
+      <label for="pn">Prénom</label>
+      <input id="pn" autocomplete="given-name" placeholder="Ex. Sofia">
+      <label for="rl">Rôle</label>
+      <select id="rl">${ROLES.map(r=>`<option>${r}</option>`).join('')}</select>
+      <button class="b" id="ok">Commencer</button>
+    </div>`;
+  document.getElementById('ok').onclick = ()=>{
+    const nom = document.getElementById('pn').value.trim();
+    if (!nom) return alert('Merci d’indiquer votre prénom.');
+    S.qui = {nom, role:document.getElementById('rl').value};
+    sauve('qui', S.qui); rafraichirSnapshot(); rendre();
+  };
+}
+
+/* ---- chambre ---- */
+function vueChambre(){
+  document.getElementById('titre').textContent = 'État d’une chambre';
+  const zones = (S.snap && S.snap.zones) || [];
+  const z = S.zone;
+  vue.innerHTML = `${bandeaux()}
+    <div class="carte">
+      <label for="ch">Numéro de chambre</label>
+      <input id="ch" inputmode="numeric" list="lz" placeholder="Ex. 505" value="${esc(z?z.room_number:'')}">
+      <datalist id="lz">${zones.map(x=>`<option value="${esc(x.room_number)}">`).join('')}</datalist>
+      ${zones.length?'':`<p class="muted">Liste des chambres non reçue — saisissez le numéro, ça fonctionne quand même.</p>`}
+    </div>
+    <div id="fiche"></div>`;
+  const inp = document.getElementById('ch');
+  inp.oninput = ()=>{ chercher(inp.value.trim()); };
+  if (z) ficheZone(z);
+}
+
+function chercher(num){
+  const zones = (S.snap && S.snap.zones) || [];
+  const z = zones.find(x=>String(x.room_number)===num);
+  if (z) { S.zone = z; ficheZone(z); return; }
+  if (/^\d{3,4}$/.test(num)) {
+    // Chambre absente de la liste publiée : on laisse faire (la liste peut être vieille),
+    // mais on prévient, car un numéro inexistant bloquerait l'import côté maintenance.
+    S.zone = {zone_id:'STU-'+num, room_number:num, zone_name:'Studio '+num,
+              studio_type:null, inconnue: zones.length > 0};
+    ficheZone(S.zone); return; }
+  S.zone = null; document.getElementById('fiche').innerHTML = '';
+}
+
+function ficheZone(z){
+  const pmr = String(z.studio_type||'').toUpperCase()==='PMR';
+  const els = ELEMENTS.filter(e=>e.id!=='boitier' || !pmr);
+  const ouverts = issuesDe(z.zone_id);
+  const dessin = els.map(e=>{
+    const st = etatElement(z.zone_id, e);
+    const bg = st.c==='rouge'?'‼':st.c==='orange'?'⚠':'';
+    // Case basse : l'icône mangerait la place du libellé, on ne garde que le texte.
+    const icone = e.p.h > 9 ? `<span class="ic">${e.ic}</span>` : '';
+    return `<a class="el" href="#" data-el="${e.id}" style="left:${e.p.x}%;top:${e.p.y}%;
+       width:${e.p.w}%;height:${e.p.h}%;background:${COUL[st.c]};z-index:${e.p.z||1}"
+       title="${esc(e.l)}">${icone}<span>${esc(e.s)}</span>
+       ${bg?`<span class="bg">${bg}</span>`:''}</a>`;
+  }).join('');
+
+  document.getElementById('fiche').innerHTML = `
+    ${z.inconnue ? `<div class="banniere warn">⚠️ La chambre <b>${esc(z.room_number)}</b>
+      ne figure pas dans la liste reçue. Vérifiez le numéro : s'il est faux, le signalement
+      devra être corrigé à la main avant d'arriver à la maintenance.</div>` : ''}
+    <div class="carte">
+      <h2>${esc(z.zone_name || ('Studio '+z.room_number))}</h2>
+      ${ouverts.length
+        ? `<p><span class="pill ${ouverts.some(i=>i.priority==='Urgente')?'r':'o'}">
+             ${ouverts.length} problème(s) ouvert(s)</span></p>`
+        : `<p><span class="pill v">Rien de signalé</span>
+             <span class="muted">— « rien de signalé » ne veut pas dire « vérifié ».</span></p>`}
+      <div class="stage">${dessin}</div>
+      <div class="legende">
+        <span><span class="sw" style="background:var(--et-gris)"></span>Rien à signaler</span>
+        <span><span class="sw" style="background:var(--et-orange)"></span>⚠ Mineur</span>
+        <span><span class="sw" style="background:var(--et-rouge)"></span>‼ Critique</span>
+      </div>
+      <p class="muted">Touchez un élément pour signaler un problème dessus.</p>
+      ${pmr?`<p class="muted">⚡ ${BOITIER_PMR}</p>`:''}
+    </div>
+    ${ouverts.length?`<div class="carte"><h2>Problèmes ouverts</h2>
+      ${ouverts.map(i=>`<div class="item">
+        <b>${esc(i.problem_type)}</b> <span class="pill ${i.priority==='Urgente'?'r':'o'}">${esc(i.priority)}</span>
+        <div>${esc(i.description)}</div>
+        <div class="muted">${esc(i.workflow_status)}${i.reported_by?' — signalé par '+esc(i.reported_by):''}</div>
+        ${S.qui.role==='Maintenance'||S.qui.role==='GM/Admin'
+          ? `<button class="b sec" style="margin-top:.5rem" data-clo="${esc(i.issue_id)}">✓ J’ai réparé</button>`:''}
+      </div>`).join('')}</div>`:''}`;
+
+  document.querySelectorAll('[data-el]').forEach(a=>a.onclick=ev=>{
+    ev.preventDefault(); S.onglet='signaler'; S.preEl = a.dataset.el; rendre();
+  });
+  document.querySelectorAll('[data-clo]').forEach(b=>b.onclick=()=>vueCloture(b.dataset.clo));
+}
+
+/* ---- signaler ---- */
+function vueSignaler(){
+  document.getElementById('titre').textContent = 'Signaler un problème';
+  const el = S.preEl ? PAR_ID[S.preEl] : null;
+  const z = S.zone;
+  vue.innerHTML = `${bandeaux()}
+    <div class="carte">
+      <label for="sch">Chambre</label>
+      <input id="sch" inputmode="numeric" value="${esc(z?z.room_number:'')}" placeholder="Ex. 505">
+      <label for="sel">Élément concerné</label>
+      <select id="sel">
+        <option value="">— Autre / je ne sais pas —</option>
+        ${ELEMENTS.map(e=>`<option value="${e.id}" ${el&&el.id===e.id?'selected':''}>${esc(e.l)}</option>`).join('')}
+      </select>
+      <label for="sty">Type de problème</label>
+      <select id="sty">${TYPES.map(t=>`<option ${el&&el.t===t?'selected':''}>${esc(t)}</option>`).join('')}</select>
+      <label for="sde">Qu'est-ce qui ne va pas ?</label>
+      <textarea id="sde" placeholder="Décrivez simplement. Ex. « le robinet goutte en continu »">${el?esc(el.l)+' : ':''}</textarea>
+      <label for="spr">Urgence</label>
+      <select id="spr">${PRIORITES.map(p=>`<option ${p==='Moyenne'?'selected':''}>${p}</option>`).join('')}</select>
+      <p class="muted">« Urgente » = la chambre ne peut pas être vendue ou il y a un risque.</p>
+
+      <label>Photos</label>
+      <input type="file" id="sph" accept="image/*" capture="environment" multiple>
+      <div class="vignettes" id="vg"></div>
+
+      <button class="b" id="env">Envoyer à la maintenance</button>
+      <div id="res"></div>
+    </div>`;
+
+  document.getElementById('sel').onchange = e=>{
+    const x = PAR_ID[e.target.value];
+    if (!x) return;
+    document.getElementById('sty').value = x.t;
+    const d = document.getElementById('sde');
+    if (!d.value.trim() || /^.+ : $/.test(d.value)) d.value = x.l + ' : ';
+  };
+  document.getElementById('sph').onchange = async e=>{
+    for (const f of e.target.files) {
+      try { S.photos.push(await compresser(f)); }
+      catch (err) { alert(err.message); }
+    }
+    e.target.value = ''; vignettes();
+  };
+  document.getElementById('env').onclick = envoiSignalement;
+  vignettes();
+}
+
+function vignettes(){
+  const d = document.getElementById('vg'); if (!d) return;
+  d.innerHTML = S.photos.map((p,i)=>`<figure><img src="${p}" alt="">
+     <button data-p="${i}" aria-label="Retirer">✕</button></figure>`).join('');
+  d.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{
+    S.photos.splice(+b.dataset.p,1); vignettes();
+  });
+}
+
+async function envoiSignalement(){
+  const num = document.getElementById('sch').value.trim();
+  const des = document.getElementById('sde').value.trim();
+  const res = document.getElementById('res');
+  if (!num) return alert('Indiquez le numéro de chambre.');
+  if (des.length < 5) return alert('Décrivez le problème en quelques mots.');
+
+  const b = document.getElementById('env');
+  b.disabled = true; b.textContent = 'Envoi…';
+  const elId = document.getElementById('sel').value;
+  const zones = (S.snap && S.snap.zones) || [];
+  const z = zones.find(x=>String(x.room_number)===num);
+
+  const r = await envoyer({
+    type:'signalement',
+    zone_id: z ? z.zone_id : 'STU-'+num,
+    chambre: num,
+    element_id: elId,
+    element_label: elId ? PAR_ID[elId].l : '',
+    type_probleme: document.getElementById('sty').value,
+    priorite: document.getElementById('spr').value,
+    description: des,
+    signale_par: S.qui.nom, role: S.qui.role,
+    device_id: S.device,
+    photos: S.photos.map(d=>({data:d, mime:'image/jpeg'})),
+  });
+
+  b.disabled = false; b.textContent = 'Envoyer à la maintenance';
+  if (r.ok) {
+    S.photos = []; S.preEl = null;
+    res.innerHTML = `<div class="banniere ok">✅ Signalement transmis. Merci !</div>`;
+    document.getElementById('sde').value = '';
+    vignettes();
+  } else if (r.enAttente) {
+    S.photos = []; S.preEl = null;
+    res.innerHTML = `<div class="banniere warn">📴 Pas de réseau : votre signalement est
+      <b>gardé dans le téléphone</b> et partira automatiquement. Ne fermez pas l'app tout de suite.</div>`;
+    vignettes();
+  } else {
+    res.innerHTML = `<div class="banniere err">❌ ${esc(r.message||'Échec')}</div>`;
+  }
+}
+
+/* ---- débits ---- */
+function vueDebits(){
+  document.getElementById('titre').textContent = 'Relevé des débits';
+  const z = S.zone;
+  vue.innerHTML = `${bandeaux()}
+    <div class="carte">
+      <h2>Débits d'eau (litres/minute)</h2>
+      <p class="muted">Mesure au débitmètre ou au sac gradué, robinet grand ouvert.
+         Les cibles sont indicatives, ce ne sont pas des normes officielles.</p>
+      <label for="dch">Chambre</label>
+      <input id="dch" inputmode="numeric" value="${esc(z?z.room_number:'')}" placeholder="Ex. 505">
+      <label for="dcu">Robinet cuisine — cible ${CIBLES.cuisine}</label>
+      <input id="dcu" inputmode="decimal" placeholder="L/min">
+      <label for="dsd">Robinet salle de bain — cible ${CIBLES.sdb}</label>
+      <input id="dsd" inputmode="decimal" placeholder="L/min">
+      <label for="ddo">Pommeau de douche — cible ${CIBLES.douche}</label>
+      <input id="ddo" inputmode="decimal" placeholder="L/min">
+      <button class="b" id="denv">Enregistrer le relevé</button>
+      <div id="dres"></div>
+    </div>`;
+  document.getElementById('denv').onclick = async ()=>{
+    const num = document.getElementById('dch').value.trim();
+    if (!num) return alert('Indiquez le numéro de chambre.');
+    const v = id=>document.getElementById(id).value.trim();
+    if (!v('dcu') && !v('dsd') && !v('ddo')) return alert('Saisissez au moins une mesure.');
+    const zones = (S.snap && S.snap.zones) || [];
+    const z2 = zones.find(x=>String(x.room_number)===num);
+    const b = document.getElementById('denv'); b.disabled = true; b.textContent='Envoi…';
+    const r = await envoyer({type:'debits', zone_id:z2?z2.zone_id:'STU-'+num, chambre:num,
+      cuisine:v('dcu'), sdb:v('dsd'), douche:v('ddo'), mesure_par:S.qui.nom, device_id:S.device});
+    b.disabled = false; b.textContent='Enregistrer le relevé';
+    document.getElementById('dres').innerHTML = r.ok
+      ? `<div class="banniere ok">✅ Relevé enregistré.</div>`
+      : r.enAttente ? `<div class="banniere warn">📴 Gardé dans le téléphone, partira au retour du réseau.</div>`
+      : `<div class="banniere err">❌ ${esc(r.message||'Échec')}</div>`;
+    if (r.ok||r.enAttente) ['dcu','dsd','ddo'].forEach(i=>document.getElementById(i).value='');
+  };
+}
+
+/* ---- clôture technicien ---- */
+function vueCloture(issueId){
+  S.onglet = ''; rendreNav();
+  document.getElementById('titre').textContent = 'Clôturer';
+  const i = ((S.snap&&S.snap.issues)||[]).find(x=>x.issue_id===issueId) || {};
+  vue.innerHTML = `
+    <div class="carte">
+      <h2>J'ai réparé</h2>
+      <p><b>${esc(i.problem_type||'')}</b><br>${esc(i.description||'')}</p>
+      <label for="caf">Qu'avez-vous fait ?</label>
+      <textarea id="caf" placeholder="Ex. « joint remplacé, plus de fuite »"></textarea>
+      <label>Photo après réparation</label>
+      <input type="file" id="cph" accept="image/*" capture="environment" multiple>
+      <div class="vignettes" id="vg"></div>
+      <button class="b" id="cenv">Marquer comme réparé</button>
+      <button class="b sec" onclick="S.onglet='chambre';rendre()">Annuler</button>
+      <div id="cres"></div>
+      <p class="muted">Steven validera la clôture dans l'app ; c'est elle qui fait foi.</p>
+    </div>`;
+  document.getElementById('cph').onchange = async e=>{
+    for (const f of e.target.files) { try{ S.photos.push(await compresser(f)); }catch(err){ alert(err.message); } }
+    e.target.value=''; vignettes();
+  };
+  document.getElementById('cenv').onclick = async ()=>{
+    const a = document.getElementById('caf').value.trim();
+    if (a.length<3) return alert('Décrivez brièvement ce que vous avez fait.');
+    const b = document.getElementById('cenv'); b.disabled=true; b.textContent='Envoi…';
+    const r = await envoyer({type:'cloture', issue_id:issueId, zone_id:i.zone_id||(S.zone&&S.zone.zone_id),
+      chambre:S.zone?S.zone.room_number:'', action_faite:a, technicien:S.qui.nom, device_id:S.device,
+      photos:S.photos.map(d=>({data:d,mime:'image/jpeg'}))});
+    b.disabled=false; b.textContent='Marquer comme réparé';
+    S.photos=[];
+    document.getElementById('cres').innerHTML = r.ok
+      ? `<div class="banniere ok">✅ Transmis.</div>`
+      : r.enAttente ? `<div class="banniere warn">📴 Gardé, partira au retour du réseau.</div>`
+      : `<div class="banniere err">❌ ${esc(r.message||'Échec')}</div>`;
+    vignettes();
+  };
+  vignettes();
+}
+
+/* ---- mes envois ---- */
+async function vueMes(){
+  document.getElementById('titre').textContent = 'Mes envois';
+  vue.innerHTML = `${bandeaux()}<div class="carte"><p class="muted">Chargement…</p></div>`;
+  let liste = [];
+  try { const r = await appelGet('mes', {device:S.device}); liste = r.signalements||[]; }
+  catch(e){ vue.innerHTML = `${bandeaux()}<div class="banniere err">Impossible de charger : ${esc(e.message)}</div>`; return; }
+
+  vue.innerHTML = `${bandeaux()}
+    <div class="carte"><h2>Ce que j'ai envoyé</h2>
+      ${liste.length? liste.map(s=>`<div class="item">
+        <b>${esc(s.chambre)}</b> — ${esc(s.element_label||s.type_probleme)}
+        <span class="pill ${s.etat==='annulé'?'':'o'}">${esc(s.etat)}</span>
+        ${s.exporte?'<span class="pill v">reçu par la maintenance</span>':''}
+        <div>${esc(s.description)}</div>
+        <div class="muted">${new Date(s.horodatage).toLocaleString('fr-BE')}</div>
+        ${s.etat!=='annulé'&&!s.exporte
+          ? `<button class="b danger" style="margin-top:.5rem" data-an="${esc(s.id)}">Annuler cet envoi</button>`
+          : ''}
+      </div>`).join('') : `<p class="muted">Rien pour l'instant.</p>`}
+    </div>`;
+  document.querySelectorAll('[data-an]').forEach(b=>b.onclick=async()=>{
+    if (!confirm('Annuler ce signalement ? La maintenance ne le recevra pas.')) return;
+    const r = await appelPost({type:'annuler', id:b.dataset.an, device_id:S.device});
+    if (r.ok) vueMes(); else alert(r.erreur||'Impossible.');
+  });
+}
+
+/* ---- réglages ---- */
+document.getElementById('btnReglages').onclick = ()=>{
+  S.onglet=''; rendreNav();
+  document.getElementById('titre').textContent='Réglages';
+  vue.innerHTML = `
+    <div class="carte">
+      <h2>Réglages</h2>
+      <label for="rn">Prénom</label>
+      <input id="rn" value="${esc(S.qui?S.qui.nom:'')}">
+      <label for="rr">Rôle</label>
+      <select id="rr">${ROLES.map(r=>`<option ${S.qui&&S.qui.role===r?'selected':''}>${r}</option>`).join('')}</select>
+      <label for="rk">Clé d'accès</label>
+      <input id="rk" value="${esc(S.cle)}" placeholder="Fournie par Steven">
+      <button class="b" id="rok">Enregistrer</button>
+      <button class="b sec" id="rmaj">Actualiser l'état des chambres</button>
+      <p class="muted">Appareil : ${esc(S.device)}<br>
+        État publié le : ${S.snap&&S.snap.publie_le?new Date(S.snap.publie_le).toLocaleString('fr-BE'):'jamais reçu'}</p>
+    </div>`;
+  document.getElementById('rok').onclick=()=>{
+    S.qui={nom:document.getElementById('rn').value.trim()||'—', role:document.getElementById('rr').value};
+    S.cle=document.getElementById('rk').value.trim();
+    sauve('qui',S.qui); localStorage.setItem('terrain.cle',S.cle);
+    S.onglet='chambre'; rafraichirSnapshot(); rendre();
+  };
+  document.getElementById('rmaj').onclick=async()=>{ await rafraichirSnapshot(); alert('État actualisé.'); };
+};
+
+/* ---------------------------------------------------------------- démarrage */
+
+async function rafraichirSnapshot(){
+  if (!S.cle) return;
+  try {
+    const r = await appelGet('snapshot');
+    if (r && r.ok && !r.vide) { S.snap = r; sauve('snap', r); }
+  } catch { /* hors ligne : on garde la copie locale */ }
+}
+
+document.getElementById('nav').onclick = e=>{
+  const b = e.target.closest('[data-o]'); if (!b) return;
+  S.onglet = b.dataset.o; S.preEl = null; rendre();
+};
+
+rendre();
+rafraichirSnapshot().then(rendre);
+viderFile();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
