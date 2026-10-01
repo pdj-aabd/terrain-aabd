@@ -683,8 +683,15 @@ async function vueMes(){
     </div>`;
   document.querySelectorAll('[data-an]').forEach(b=>b.onclick=async()=>{
     if (!confirm('Annuler ce signalement ? La maintenance ne le recevra pas.')) return;
-    const r = await appelPost({type:'annuler', id:b.dataset.an, device_id:S.device});
-    if (r.ok) vueMes(); else alert(r.erreur||'Impossible.');
+    let r;
+    try { r = await appelPost({type:'annuler', id:b.dataset.an, device_id:S.device}); }
+    catch (e) { r = {ok:false, erreur:e.message}; }
+    // On réaffiche TOUJOURS la liste telle que le serveur la voit : il arrive qu'une
+    // annulation aboutisse alors que la réponse se perd, et l'écran doit dire le vrai.
+    await vueMes();
+    if (!r || !r.ok)
+      alert((r && r.erreur ? r.erreur : 'Annulation incertaine.') +
+            "\n\nRegardez la liste : l'annulation a peut-être tout de même été prise en compte.");
   });
 }
 

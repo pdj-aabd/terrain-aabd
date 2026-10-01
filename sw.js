@@ -4,7 +4,7 @@
 /* Le stockage de cache est partagé par TOUTE l'origine (github.io du compte) : d'autres
  * apps de l'hôtel y vivent. On ne touche donc jamais qu'aux caches portant notre préfixe. */
 const PREFIXE = 'adagio-terrain-';
-const CACHE = PREFIXE + 'v2';   // à incrémenter à chaque publication
+const CACHE = PREFIXE + 'v3';   // à incrémenter à chaque publication
 const FICHIERS = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
